@@ -10,7 +10,7 @@ if false
     ŷ = repeat(1:ntimesteps, nclasses) ./ 5
     ŷ = reshape(ŷ, nclasses, ntimesteps)
 else
-    nclasses, nlabels, ntimesteps = 400, 100, 501
+    nclasses, nlabels, ntimesteps = 40, 10, 51
     ŷ = randn(nclasses, ntimesteps)
 end
 

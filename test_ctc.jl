@@ -10,19 +10,20 @@ disp3(a) = display(round.(a, digits=3))
 macro sbt(ex)
     quote 
         @show $ex
-        # @btime $ex
-        # println() 
+        @btime $ex
+        println() 
     end
 end
 
 ### 
 # Calculate Loss and Grad robustly
 ###
-manlogloss, manloggrad = _ctc_log_manual(exitements, z)
-@show manlogloss
-@show manloggrad |> extrema
+manlogloss, manloggrad = _ctc_log_loss_and_grad(exitements, z)
 matches(a) = "Invalid"
 matches(grad::Matrix) = manloggrad ≈ grad ? "Yes" : "No"
+@show manlogloss
+@show manloggrad |> extrema
+println()
 
 ###
 # Test Loss Calculation
@@ -59,6 +60,7 @@ macro checkgrad(ex)
             g = $ex
             println($strex, " matches?\t", $matches(g))
             @btime $ex 
+            println()
         catch err
             println($strex, " errors out!\n\t", err)
         end
