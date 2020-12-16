@@ -10,7 +10,7 @@ if false
     ŷ = repeat(1:ntimesteps, nclasses) ./ 5
     ŷ = reshape(ŷ, nclasses, ntimesteps)
 else
-    nclasses, nlabels, ntimesteps = 40, 10, 51
+    nclasses, nlabels, ntimesteps = 64, 50, 201
     ŷ = randn(nclasses, ntimesteps)
 end
 
@@ -20,13 +20,13 @@ for i in 1:nlabels
     append!(z, nclasses)
 end
 
-z1 = z[2:2:end]
+labels = z[2:2:end]
 
 
 exitements = softmax(ŷ)
 # println("ŷ"), display(ŷ)
 # println("softmax(ŷ)"), display(round.(exitements, digits=2))
 
-@show nclasses nlabels ntimesteps z1
+@show nclasses nlabels ntimesteps labels
 println()
 

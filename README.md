@@ -1,57 +1,64 @@
 # Explore-CTC-Loss.jl
-We explore various ways of implementing the Connectionist Temporal Classification (CTC) Loss function in Julia with Zygote (or not).
+We explore various ways of implementing the Connectionist Temporal Classification (CTC) Loss function in Julia with Zygote (or not). We also compare it with the existing [https://github.com/maetshju/flux-ctc-grad].
 
 
 ```julia
 > include("test_ctc.jl")
-nclasses = 40
-nlabels = 10
-ntimesteps = 51
-z1 = [17, 3, 15, 33, 19, 8, 31, 25, 1, 19]
+nclasses = 64
+nlabels = 50
+ntimesteps = 201
+labels = [20, 9, ..., 57]
 
-manlogloss = 164.68826006918255
-manloggrad |> extrema = (-130.3695491682583, 0.0)
+manlogloss = 689.8988368628794
+manloggrad |> extrema = (-191.85841465326217, 0.0)
 
-ctc_plain_multiply(exitements, z) = 164.68826006918246
-  12.166 μs (177 allocations: 42.45 KiB)
+ctc_plain_multiply(exitements, z) = 689.8988368628798
+  789.006 μs (708 allocations: 609.92 KiB)
 
-ctc_plain(exitements, z) = 164.68826006918246
-  87.394 μs (1526 allocations: 137.81 KiB)
+ctc_plain(exitements, z) = 689.8988368628798
+  462.985 μs (6026 allocations: 1.53 MiB)
 
-ctc_plain_both(exitements, z) = 164.68826006918246
-  86.185 μs (1528 allocations: 137.63 KiB)
+ctc_plain_both(exitements, z) = 689.8988368628798
+  464.565 μs (6108 allocations: 1.53 MiB)
 
-ctc_plain_manual(exitements, z) = 164.68826006918246
-  49.156 μs (884 allocations: 290.16 KiB)
+ctc_plain_manual(exitements, z) = 689.8988368628798
+  800.852 μs (3618 allocations: 4.12 MiB)
 
-ctc_log(exitements, z) = 164.68826006918255
-  132.540 μs (1478 allocations: 125.89 KiB)
+ctc_log(exitements, z) = 689.8988368628794
+  1.467 ms (5908 allocations: 1.36 MiB)
 
-ctc_log_both(exitements, z) = 164.68826006918255
-  136.563 μs (1528 allocations: 137.63 KiB)
+ctc_log_both(exitements, z) = 689.8988368628794
+  1.453 ms (6108 allocations: 1.53 MiB)
 
-ctc_log_manual(exitements, z) = 164.68826006918255
-  127.972 μs (365 allocations: 163.83 KiB)
+ctc_log_manual(exitements, z) = 689.8988368628794
+  2.425 ms (1520 allocations: 2.44 MiB)
+
+ctc_log_manual_kelley(exitements, z) = 689.8988368628796
+  27.119 ms (613761 allocations: 19.14 MiB)
 
 
-dctc_plain_multiply(exitements, z) matches?	Yes
-  312.818 μs (1801 allocations: 2.05 MiB)
+dctc_plain_multiply(exitements, z) matches? YES
+  16.697 ms (7873 allocations: 71.77 MiB)
 
-dctc_plain(exitements, z) matches?	Yes
-  4.460 ms (22157 allocations: 2.82 MiB)
+dctc_plain(exitements, z) matches? YES
+  24.078 ms (88304 allocations: 47.39 MiB)
 
-dctc_plain_both(exitements, z) matches?	Yes
-  4.605 ms (22288 allocations: 2.83 MiB)
+dctc_plain_both(exitements, z) matches? YES
+  24.381 ms (89038 allocations: 47.42 MiB)
 
-dctc_plain_manual(exitements, z) matches?	Yes
-  50.676 μs (884 allocations: 306.20 KiB)
+dctc_plain_manual(exitements, z) matches? YES
+  808.404 μs (3619 allocations: 4.21 MiB)
 
-dctc_log_manual(exitements, z) matches?	Yes
-  129.140 μs (365 allocations: 179.88 KiB)
-
-dctc_log(exitements, z) matches?	Yes
-  1.282 ms (21175 allocations: 2.55 MiB)
+dctc_log(exitements, z) matches? YES
+  13.325 ms (244773 allocations: 51.87 MiB)
 
 dctc_log_both(exitements, z) errors out!
-	DomainError(-1.0, "log will only return a complex result if called with a complex argument. Try log(Complex(x)).")
+	DomainError(-1.0, "Try log(Complex(x)).")
+
+dctc_log_manual(exitements, z) matches? YES
+  2.441 ms (1521 allocations: 2.54 MiB)
+
+dctc_log_manual_kelley(exitements, z) matches? YES
+  29.229 ms (613790 allocations: 19.24 MiB)
+
 ```
