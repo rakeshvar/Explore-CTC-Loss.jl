@@ -7,31 +7,30 @@ import ChainRulesCore: rrule, DoesNotExist, NO_FIELDS
 # Code from https://github.com/maetshju/flux-ctc-grad
 # Modified to take softmax-ed argument
 ##
-
-function klogadd(a, b)
+function lgadd(a, b)
   isinf(a) && return b
   isinf(b) && return a
   if a < b
     a, b = b, a
   end
-  return a + log(1+exp(b-a))
+  a + log(1+exp(b-a))
 end
 
 function logsum(a::AbstractArray)
   local s
   s = a[1]
   for item in a[2:end]
-    s = klogadd(s, item)
+    s = lgadd(s, item)
   end
   return s
 end
 
 function _ctc_kelley(exite, z)
   typedZero = zero(exite[1])
+  exite = logsoftmax(exite)
   blank = size(exite, 1)
-  T = size(exite, 2)   
+  T = size(exite, 2)
   U = length(z)
-  exite = log.(exite)
 
   # Calculate α coefficients, from the upper-left, to the bottom-right
   α = fill(typedZero, T, U)
@@ -59,7 +58,7 @@ function _ctc_kelley(exite, z)
   β[T,U] = typedZero
   β[T,U-1] = typedZero
   
-  # start at T-1 so that β(T, u) = log(0) for all u < U′ - 1
+  # start at T-1 so that β(T, u) = log(0) for all u < U - 1
   for t=(T-1):-1:1
     for u=U:-1:1
       if u > 2t || u > U + 1
@@ -78,26 +77,24 @@ function _ctc_kelley(exite, z)
 
   αβ = α + β
   losses = -1 .* mapslices(logsum, αβ, dims=2)
-#   disp3(αβ')
-#   @show extrema(losses)
 
   accum = fill(log(typedZero), size(exite))
   grads = fill(log(typedZero), size(exite))
 
   for t=1:T
     for u=1:U
-      accum[z[u], t] = klogadd(accum[z[u], t], α[t,u] + β[t,u])
+      accum[z[u], t] = lgadd(accum[z[u], t], α[t,u] + β[t,u])
     end
     for u=1:size(grads, 1)
-      grads[u,t] =  - exp(accum[u, t] - -losses[t]) / exp(exite[u, t])
+      grads[u,t] = exp(exite[u, t]) - exp(accum[u, t] - -losses[t])
     end
   end
 
   return losses, grads
 end
 
-function ctc_log_manual_kelley(ŷ::Array, y::Array)
-  return _ctc_kelley(ŷ, y)[1] |> mean
+function ctc_log_manual_kelley(exite::Array, y::Array)
+  return _ctc_kelley(exite, y)[1] |> mean
 end
 
 function rrule(::typeof(ctc_log_manual_kelley), exite, labels)

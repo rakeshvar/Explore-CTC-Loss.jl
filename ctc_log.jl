@@ -27,30 +27,32 @@ end
 
 ################################ Log CTC with Mutation # Needs pullback of logadd
 function ctc_log(exite::AbstractMatrix{F}, labels) where F
-	blank, T = size(exite)
+    blank, T = size(exite)
+    exite = logsoftmax(exite)
     U = length(labels)
 
-    lnα = log.(exite[labels, 1]) .+ [0., 0., fill(-Inf, U-2)...]
+    lnα = exite[labels, 1] .+ [0., 0., fill(-Inf, U-2)...]
     lnaddprevprev = @ignore log.([(labels[u] != blank && labels[u] != labels[u-2]) for u in 3:U])
 
     for t in 2:T
         lnα = vcat(lnα[1], 
                    logadd(lnα[2], lnα[1]), 
                    logadd.(lnα[3:end], lnα[2:end-1], lnaddprevprev.+lnα[1:end-2])) .+ 
-              log.(exite[labels, t])
+              exite[labels, t]
     end
     -logadd(lnα[end-1], lnα[end])
 end
 
 
 ############################################# CTC in log scale, Manual gradient
-function _ctc_log_loss_and_grad(exite::Array{F}, labels) where F
-	blank , T = size(exite)
+function _ctc_log_loss_and_grad(XXX::Array{F}, labels) where F
+	blank , T = size(XXX)
+    smx, lsmx = softmaxandlog(XXX)
     U = length(labels)
     addprevprev = [(labels[u] != blank && labels[u] != labels[u-2]) for u in 3:U]
 
     lnα = Array{F}(undef, U, T)
-    lnα[1:2, 1] = log.(exite[labels[1:2], 1])       # Since first label is blank
+    lnα[1:2, 1] = lsmx[labels[1:2], 1]       # Since first label is blank
     lnα[3:end, 1] .= log(zero(F))
     for t in 2:T
         lnα[1, t] = lnα[1, t-1] 
@@ -62,14 +64,14 @@ function _ctc_log_loss_and_grad(exite::Array{F}, labels) where F
                             logadd(lnα[u-1, t-1], lnα[u, t-1])
                         end
         end
-        lnα[:, t] .+= log.(exite[labels, t])
+        lnα[:, t] .+= lsmx[labels, t]
     end
 
     lnβ = similar(lnα)
     lnβ[1:U-2, T] .= log(zero(F))
     lnβ[U-1:U, T] .= zero(F)
     for t in (T-1):-1:1
-        lnβt1 = lnβ[:, t+1] .+ log.(exite[labels, t+1])
+        lnβt1 = lnβ[:, t+1] .+ lsmx[labels, t+1]
         lnβ[U, t] = lnβt1[U]
         lnβ[U-1, t] = logadd(lnβt1[U], lnβt1[U-1])
         for u in 1:U-2
@@ -81,13 +83,11 @@ function _ctc_log_loss_and_grad(exite::Array{F}, labels) where F
         end
     end
 
-    lnαβ = lnα + lnβ
     neglogliklihood = -logadd(lnα[U, T], lnα[U-1, T])
-    lnαβadj = lnαβ .+ neglogliklihood
-
-    gradient = zero(exite)
+    lnαβadj = lnα + lnβ .+ neglogliklihood
+    gradient = smx
     for u in 1:U
-        gradient[labels[u], :] -= exp.(lnαβadj[u, :]) ./ exite[labels[u], :] 
+        gradient[labels[u], :] -= exp.(lnαβadj[u, :])
     end
 
     neglogliklihood, gradient

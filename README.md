@@ -4,61 +4,61 @@ We explore various ways of implementing the Connectionist Temporal Classificatio
 
 ```julia
 > include("test_ctc.jl")
-nclasses = 64
-nlabels = 50
+alphabetsize = 64
+textlength = 50
 ntimesteps = 201
-labels = [20, 9, ..., 57]
+rawlabels = [57, 41, ..., 59]
 
-manlogloss = 689.8988368628794
-manloggrad |> extrema = (-191.85841465326217, 0.0)
+manlogloss = 705.237164456796
+manloggrad |> extrema = (-0.84280330876603, 0.41492393816423795)
 
-ctc_plain_multiply(exitements, z) = 689.8988368628798
-  789.006 μs (708 allocations: 609.92 KiB)
+ctc_plain_multiply(exitements, labels) = 705.237164456796
+  1.238 ms (636 allocations: 813.91 KiB)
 
-ctc_plain(exitements, z) = 689.8988368628798
-  462.985 μs (6026 allocations: 1.53 MiB)
+ctc_plain(exitements, labels) = 705.237164456796
+  689.125 μs (6035 allocations: 1.73 MiB)
 
-ctc_plain_both(exitements, z) = 689.8988368628798
-  464.565 μs (6108 allocations: 1.53 MiB)
+ctc_plain_both(exitements, labels) = 705.237164456796
+  692.193 μs (6036 allocations: 1.73 MiB)
 
-ctc_plain_manual(exitements, z) = 689.8988368628798
-  800.852 μs (3618 allocations: 4.12 MiB)
+ctc_plain_manual(exitements, labels) = 705.237164456796
+  912.961 μs (3322 allocations: 3.75 MiB)
 
-ctc_log(exitements, z) = 689.8988368628794
-  1.467 ms (5908 allocations: 1.36 MiB)
+ctc_log(exitements, labels) = 705.237164456796
+  1.562 ms (5918 allocations: 1.56 MiB)
 
-ctc_log_both(exitements, z) = 689.8988368628794
-  1.453 ms (6108 allocations: 1.53 MiB)
+ctc_log_both(exitements, labels) = 705.2371644567957
+  1.704 ms (6036 allocations: 1.73 MiB)
 
-ctc_log_manual(exitements, z) = 689.8988368628794
-  2.425 ms (1520 allocations: 2.44 MiB)
+ctc_log_manual(exitements, labels) = 705.2371644567957
+  2.465 ms (1427 allocations: 2.47 MiB)
 
-ctc_log_manual_kelley(exitements, z) = 689.8988368628796
-  27.119 ms (613761 allocations: 19.14 MiB)
+ctc_log_manual_kelley(exitements, labels) = 705.2371644567961
+  28.302 ms (601989 allocations: 19.08 MiB)
 
 
-dctc_plain_multiply(exitements, z) matches? YES
-  16.697 ms (7873 allocations: 71.77 MiB)
+dctc_plain_multiply(exitements, labels) matches? YES
+  21.584 ms (45848 allocations: 73.82 MiB)
 
-dctc_plain(exitements, z) matches? YES
-  24.078 ms (88304 allocations: 47.39 MiB)
+dctc_plain(exitements, labels) matches? YES
+  25.369 ms (126970 allocations: 49.47 MiB)
 
-dctc_plain_both(exitements, z) matches? YES
-  24.381 ms (89038 allocations: 47.42 MiB)
+dctc_plain_both(exitements, labels) matches? YES
+  25.246 ms (127017 allocations: 49.47 MiB)
 
-dctc_plain_manual(exitements, z) matches? YES
-  808.404 μs (3619 allocations: 4.21 MiB)
+dctc_plain_manual(exitements, labels) matches? YES
+  925.725 μs (3323 allocations: 3.85 MiB)
 
-dctc_log(exitements, z) matches? YES
-  13.325 ms (244773 allocations: 51.87 MiB)
+dctc_log(exitements, labels) matches? YES
+  12.320 ms (217141 allocations: 51.70 MiB)
 
-dctc_log_both(exitements, z) errors out!
+dctc_log_both(exitements, labels) errors out!
 	DomainError(-1.0, "Try log(Complex(x)).")
 
-dctc_log_manual(exitements, z) matches? YES
-  2.441 ms (1521 allocations: 2.54 MiB)
+dctc_log_manual(exitements, labels) matches? YES
+  2.432 ms (1428 allocations: 2.57 MiB)
 
-dctc_log_manual_kelley(exitements, z) matches? YES
-  29.229 ms (613790 allocations: 19.24 MiB)
+dctc_log_manual_kelley(exitements, labels) matches? YES
+  28.087 ms (602018 allocations: 19.18 MiB)
 
 ```

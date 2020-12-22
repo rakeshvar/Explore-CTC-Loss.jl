@@ -34,7 +34,7 @@ function _ctc_both(exite::AbstractMatrix{F}, labels, ::Val{uselog}) where {F<:Ab
 	blank, T = size(exite)
     U = length(labels)
     L = uselog ? LogNum{F} : F
-    α = Array{L}(exite[labels, 1] .* [1., 1., zeros(U-2)...])
+    α = Array{L}(exite[labels, 1] .* vcat(one(F), one(F), zeros(F, U-2)))
     addprevprev = @ignore [(labels[u] != blank && labels[u] != labels[u-2]) for u in 3:U]
 
     for t in 2:T
@@ -43,5 +43,5 @@ function _ctc_both(exite::AbstractMatrix{F}, labels, ::Val{uselog}) where {F<:Ab
     -log(α[U] + α[U-1])
 end
 
-ctc_plain_both(exite, labels) = _ctc_both(exite, labels, Val(false))
-ctc_log_both(exite, labels) = _ctc_both(exite, labels, Val(true))
+ctc_plain_both(exite, labels) = _ctc_both(softmax(exite), labels, Val(false))
+ctc_log_both(exite, labels) = _ctc_both(softmax(exite), labels, Val(true))

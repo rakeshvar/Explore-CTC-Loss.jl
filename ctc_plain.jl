@@ -19,9 +19,10 @@ function recurrence(labels, blank)  # Transpose is what is used
     A
 end
 
-function ctc_plain_multiply(exite, labels)
-	blank, T = size(exite)
-    α = exite[labels, 1] .* [1., 1., zeros(length(labels)-2)...]
+function ctc_plain_multiply(exite::AbstractMatrix{F}, labels) where F
+    blank, T = size(exite)
+    exite = softmax(exite)
+    α = exite[labels, 1] .* vcat(one(F), one(F), zeros(F, length(labels)-2))
     R = @ignore recurrence(labels, blank)
 
     for t in 2:T
@@ -35,8 +36,8 @@ end
 function ctc_plain(exite::AbstractMatrix{F}, labels) where F
 	blank, T = size(exite)
     U = length(labels)
+    exite = softmax(exite)
     α = exite[labels, 1] .* vcat(one(F), one(F), zeros(F, U-2))
-    # α = vcat(exite[labels[1:2],1 ], zeros(F, U-2))
     addprevprev = @ignore [(labels[u] != blank && labels[u] != labels[u-2]) for u in 3:U]
 
     for t in 2:T
@@ -51,6 +52,7 @@ function _ctc_plain_loss_and_grad(exite::AbstractMatrix{F}, labels) where F
     U = length(labels)
     addprevprev = [(labels[u] != blank && labels[u] != labels[u-2]) for u in 3:U]
 
+    exite = softmax(exite)
     α = Array{F}(undef, U, T)
     α[1:2, 1] = exite[labels[1:2], 1]       # Since first label is blank
     α[3:end, 1] .= zero(F)
@@ -73,11 +75,11 @@ function _ctc_plain_loss_and_grad(exite::AbstractMatrix{F}, labels) where F
     end
 
     liklihood = α[U, T] + α[U-1, T]
-    gradient = zero(exite)
+    αβl = α .* β ./ liklihood
+    gradient = exite
     for u in 1:U
-        gradient[labels[u], :] += α[u, :] .* β[u, :] ./ exite[labels[u], :] 
+        gradient[labels[u], :] -= αβl[u, :] 
     end
-    gradient /= -liklihood
     -log(liklihood), gradient
 end
 

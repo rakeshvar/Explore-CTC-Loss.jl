@@ -1,32 +1,26 @@
-function softmax(x) 
-    ex = exp.(x)
-    ex ./ sum(ex, dims=1)
-end
 
 if false
-    nclasses = rand(3:9)
-    nlabels = rand(2:7)
-    ntimesteps = rand(2nlabels:4nlabels)
-    ŷ = repeat(1:ntimesteps, nclasses) ./ 5
-    ŷ = reshape(ŷ, nclasses, ntimesteps)
+    alphabetsize = rand(3:9)
+    textlength = rand(2:7)
+    ntimesteps = rand(2textlength:4textlength)
+    exitements = repeat(1:ntimesteps, alphabetsize) ./ 5
+    exitements = reshape(exitements, alphabetsize, ntimesteps)
 else
-    nclasses, nlabels, ntimesteps = 64, 50, 201
-    ŷ = randn(nclasses, ntimesteps)
+    alphabetsize, textlength, ntimesteps = 64, 50, 201
+    exitements = randn(alphabetsize, ntimesteps)
 end
 
-z = [nclasses]
-for i in 1:nlabels
-    append!(z, rand(1:nclasses-1))
-    append!(z, nclasses)
+blank = alphabetsize
+labels = [blank]
+for i in 1:textlength
+    append!(labels, rand(1:blank-1))
+    append!(labels, blank)
 end
 
-labels = z[2:2:end]
+rawlabels = labels[2:2:end]
 
+# println("exitements")
+# display(round.(exitements, digits=2))
 
-exitements = softmax(ŷ)
-# println("ŷ"), display(ŷ)
-# println("softmax(ŷ)"), display(round.(exitements, digits=2))
-
-@show nclasses nlabels ntimesteps labels
+@show alphabetsize textlength ntimesteps rawlabels
 println()
-
